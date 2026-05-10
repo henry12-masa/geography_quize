@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地理クイズ100問</title>
+<style>
+body{
+  margin:0;
+  font-family:"Yu Gothic",sans-serif;
+  background:linear-gradient(135deg,#dff6ff,#6db3d6);
+  min-height:100vh;
+  color:#123;
+}
+.ad-top{
+  position:fixed;
+  top:12px;
+  right:12px;
+  width:300px;
+  height:90px;
+  border:2px dashed #1976a3;
+  border-radius:12px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  z-index:10;
+}
+.wrap{
+  max-width:760px;
+  margin:auto;
+  padding:120px 16px 40px;
+}
+.game{
+  background:rgba(255,255,255,.96);
+  border:4px solid #1976a3;
+  border-radius:24px;
+  padding:26px;
+  text-align:center;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+h1{margin-top:0;font-size:32px;}
+.menu{display:grid;gap:14px;margin-top:20px;}
+button{
+  font-size:18px;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+  background:#1976a3;
+  color:white;
+  font-weight:bold;
+}
+button:hover{transform:scale(1.03);}
+.status{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+  font-weight:bold;
+  margin-bottom:18px;
+}
+.question{
+  font-size:22px;
+  font-weight:bold;
+  background:#eaf8ff;
+  border-radius:16px;
+  padding:22px;
+  margin-bottom:20px;
+  line-height:1.6;
+}
+.choices{display:grid;gap:12px;}
+.correct{background:#2e8b57!important;}
+.wrong{background:#b22222!important;}
+.result{
+  font-size:22px;
+  font-weight:bold;
+  margin-top:18px;
+  min-height:32px;
+}
+.comment{
+  margin-top:12px;
+  font-size:15px;
+  color:#345;
+  line-height:1.6;
+}
+.next{margin-top:18px;background:#1f4e79;display:none;}
+.restart{margin-top:18px;background:#6b3fa0;display:none;}
+.ad-bottom{
+  margin-top:24px;
+  height:100px;
+  border:2px dashed #1976a3;
+  border-radius:14px;
+  background:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+.hidden{display:none;}
+@media(max-width:900px){
+  .ad-top{position:static;width:auto;height:70px;margin:12px;}
+  .wrap{padding-top:20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="ad-top">
+  広告枠・右上<br>
+  AdSenseコードはここに貼る
+</div>
+
+<div class="wrap">
+<div class="game">
+<h1>🌏 地理クイズ100問</h1>
+
+<div id="menu">
+  <p>難易度を選んでください</p>
+  <div class="menu">
+    <button onclick="startGame('easy')">初級：日本地理</button>
+    <button onclick="startGame('normal')">中級：世界地理</button>
+    <button onclick="startGame('hard')">上級：地形・国・首都</button>
+    <button onclick="startGame('all')">全100問ランダム</button>
+  </div>
+</div>
+
+<div id="quiz" class="hidden">
+  <div class="status">
+    <div>難易度：<span id="levelName"></span></div>
+    <div>問題：<span id="count"></span>/<span id="total"></span></div>
+    <div>スコア：<span id="score">0</span></div>
+  </div>
+
+  <div class="question" id="question"></div>
+  <div class="choices" id="choices"></div>
+  <div class="result" id="result"></div>
+  <div class="comment" id="comment"></div>
+
+  <button class="next" id="nextBtn" onclick="nextQuestion()">次の問題へ</button>
+  <button class="restart" id="restartBtn" onclick="restartGame()">メニューに戻る</button>
+</div>
+
+<div class="ad-bottom">
+  広告枠・下部<br>
+  AdSenseコードはここに貼る
+</div>
+
+</div>
+</div>
+
+<script>
+const quizData = [
+{level:"easy",q:"日本の首都はどこ？",c:["東京","大阪","京都","福岡"],a:"東京",e:"日本の首都は東京です。"},
+{level:"easy",q:"北海道の県庁所在地は？",c:["札幌市","函館市","旭川市","釧路市"],a:"札幌市",e:"北海道の道庁所在地は札幌市です。"},
+{level:"easy",q:"日本で一番高い山は？",c:["富士山","北岳","槍ヶ岳","阿蘇山"],a:"富士山",e:"富士山は標高3776mで日本一高い山です。"},
+{level:"easy",q:"日本で一番長い川は？",c:["信濃川","利根川","石狩川","木曽川"],a:"信濃川",e:"日本最長の川は信濃川です。"},
+{level:"easy",q:"日本で一番大きい湖は？",c:["琵琶湖","霞ヶ浦","サロマ湖","十和田湖"],a:"琵琶湖",e:"琵琶湖は滋賀県にあります。"},
+{level:"easy",q:"沖縄県の県庁所在地は？",c:["那覇市","石垣市","名護市","宮古島市"],a:"那覇市",e:"沖縄県の県庁所在地は那覇市です。"},
+{level:"easy",q:"青森県の県庁所在地は？",c:["青森市","弘前市","八戸市","五所川原市"],a:"青森市",e:"青森県の県庁所在地は青森市です。"},
+{level:"easy",q:"大阪府の府庁所在地は？",c:["大阪市","堺市","枚方市","東大阪市"],a:"大阪市",e:"大阪府の府庁所在地は大阪市です。"},
+{level:"easy",q:"京都府の府庁所在地は？",c:["京都市","宇治市","舞鶴市","福知山市"],a:"京都市",e:"京都府の府庁所在地は京都市です。"},
+{level:"easy",q:"福岡県の県庁所在地は？",c:["福岡市","北九州市","久留米市","飯塚市"],a:"福岡市",e:"福岡県の県庁所在地は福岡市です。"},
+
+{level:"easy",q:"四国にある県ではないものは？",c:["鳥取県","香川県","徳島県","高知県"],a:"鳥取県",e:"鳥取県は中国地方です。"},
+{level:"easy",q:"九州にある県はどれ？",c:["熊本県","山梨県","長野県","群馬県"],a:"熊本県",e:"熊本県は九州地方です。"},
+{level:"easy",q:"東北地方にある県はどれ？",c:["宮城県","愛知県","滋賀県","岡山県"],a:"宮城県",e:"宮城県は東北地方です。"},
+{level:"easy",q:"関東地方にある県はどれ？",c:["神奈川県","兵庫県","広島県","香川県"],a:"神奈川県",e:"神奈川県は関東地方です。"},
+{level:"easy",q:"中部地方にある県はどれ？",c:["新潟県","福岡県","宮崎県","奈良県"],a:"新潟県",e:"新潟県は中部地方に含まれます。"},
+{level:"easy",q:"近畿地方にある県はどれ？",c:["奈良県","栃木県","山形県","長崎県"],a:"奈良県",e:"奈良県は近畿地方です。"},
+{level:"easy",q:"中国地方にある県はどれ？",c:["広島県","愛媛県","佐賀県","岐阜県"],a:"広島県",e:"広島県は中国地方です。"},
+{level:"easy",q:"日本海に面している県はどれ？",c:["新潟県","静岡県","高知県","三重県"],a:"新潟県",e:"新潟県は日本海に面しています。"},
+{level:"easy",q:"太平洋に面している県はどれ？",c:["静岡県","山梨県","長野県","岐阜県"],a:"静岡県",e:"静岡県は太平洋に面しています。"},
+{level:"easy",q:"瀬戸内海に面している県はどれ？",c:["香川県","青森県","山形県","富山県"],a:"香川県",e:"香川県は瀬戸内海に面しています。"},
+
+{level:"easy",q:"富士山がまたがる県は静岡県とどこ？",c:["山梨県","長野県","岐阜県","群馬県"],a:"山梨県",e:"富士山は静岡県と山梨県にまたがります。"},
+{level:"easy",q:"東京ディズニーリゾートがある県は？",c:["千葉県","東京都","神奈川県","埼玉県"],a:"千葉県",e:"東京ディズニーリゾートは千葉県浦安市にあります。"},
+{level:"easy",q:"厳島神社がある県は？",c:["広島県","島根県","山口県","岡山県"],a:"広島県",e:"厳島神社は広島県の宮島にあります。"},
+{level:"easy",q:"金閣寺がある都道府県は？",c:["京都府","奈良県","滋賀県","大阪府"],a:"京都府",e:"金閣寺は京都府京都市にあります。"},
+{level:"easy",q:"原爆ドームがある都市は？",c:["広島市","長崎市","福岡市","大阪市"],a:"広島市",e:"原爆ドームは広島市にあります。"},
+{level:"easy",q:"日本三景の松島がある県は？",c:["宮城県","岩手県","福島県","秋田県"],a:"宮城県",e:"松島は宮城県にあります。"},
+{level:"easy",q:"日本三景の天橋立がある府県は？",c:["京都府","兵庫県","滋賀県","福井県"],a:"京都府",e:"天橋立は京都府にあります。"},
+{level:"easy",q:"日本三景の宮島がある県は？",c:["広島県","山口県","島根県","愛媛県"],a:"広島県",e:"宮島は広島県にあります。"},
+{level:"easy",q:"北海道の南にある大きな島は？",c:["本州","四国","九州","沖縄本島"],a:"本州",e:"北海道の南には本州があります。"},
+{level:"easy",q:"日本の最南端に近い都道府県は？",c:["沖縄県","北海道","東京都","青森県"],a:"沖縄県",e:"沖縄県は日本の南西部にあります。"},
+
+{level:"normal",q:"アメリカ合衆国の首都は？",c:["ワシントンD.C.","ニューヨーク","ロサンゼルス","シカゴ"],a:"ワシントンD.C.",e:"アメリカの首都はワシントンD.C.です。"},
+{level:"normal",q:"イギリスの首都は？",c:["ロンドン","マンチェスター","リバプール","エディンバラ"],a:"ロンドン",e:"イギリスの首都はロンドンです。"},
+{level:"normal",q:"フランスの首都は？",c:["パリ","リヨン","マルセイユ","ニース"],a:"パリ",e:"フランスの首都はパリです。"},
+{level:"normal",q:"ドイツの首都は？",c:["ベルリン","ミュンヘン","ハンブルク","フランクフルト"],a:"ベルリン",e:"ドイツの首都はベルリンです。"},
+{level:"normal",q:"イタリアの首都は？",c:["ローマ","ミラノ","ナポリ","ベネチア"],a:"ローマ",e:"イタリアの首都はローマです。"},
+{level:"normal",q:"中国の首都は？",c:["北京","上海","広州","深圳"],a:"北京",e:"中国の首都は北京です。"},
+{level:"normal",q:"韓国の首都は？",c:["ソウル","釜山","仁川","大邱"],a:"ソウル",e:"韓国の首都はソウルです。"},
+{level:"normal",q:"インドの首都は？",c:["ニューデリー","ムンバイ","コルカタ","チェンナイ"],a:"ニューデリー",e:"インドの首都はニューデリーです。"},
+{level:"normal",q:"オーストラリアの首都は？",c:["キャンベラ","シドニー","メルボルン","パース"],a:"キャンベラ",e:"オーストラリアの首都はキャンベラです。"},
+{level:"normal",q:"ブラジルの首都は？",c:["ブラジリア","リオデジャネイロ","サンパウロ","サルバドール"],a:"ブラジリア",e:"ブラジルの首都はブラジリアです。"},
+
+{level:"normal",q:"世界で最も面積が大きい国は？",c:["ロシア","カナダ","中国","アメリカ"],a:"ロシア",e:"ロシアは世界最大の面積を持つ国です。"},
+{level:"normal",q:"世界で人口が多い国の一つは？",c:["インド","ノルウェー","ニュージーランド","アイスランド"],a:"インド",e:"インドは世界有数の人口大国です。"},
+{level:"normal",q:"ナイル川が流れる大陸は？",c:["アフリカ大陸","南アメリカ大陸","ヨーロッパ大陸","オーストラリア大陸"],a:"アフリカ大陸",e:"ナイル川はアフリカを流れます。"},
+{level:"normal",q:"アマゾン川が流れる大陸は？",c:["南アメリカ大陸","アフリカ大陸","アジア大陸","ヨーロッパ大陸"],a:"南アメリカ大陸",e:"アマゾン川は南アメリカを流れます。"},
+{level:"normal",q:"サハラ砂漠がある大陸は？",c:["アフリカ大陸","アジア大陸","北アメリカ大陸","南極大陸"],a:"アフリカ大陸",e:"サハラ砂漠はアフリカ北部にあります。"},
+{level:"normal",q:"アルプス山脈がある地域は？",c:["ヨーロッパ","アフリカ","南アメリカ","オセアニア"],a:"ヨーロッパ",e:"アルプス山脈はヨーロッパにあります。"},
+{level:"normal",q:"ヒマラヤ山脈がある地域は？",c:["アジア","ヨーロッパ","アフリカ","北アメリカ"],a:"アジア",e:"ヒマラヤ山脈はアジアにあります。"},
+{level:"normal",q:"エベレストがある山脈は？",c:["ヒマラヤ山脈","アルプス山脈","アンデス山脈","ロッキー山脈"],a:"ヒマラヤ山脈",e:"エベレストはヒマラヤ山脈にあります。"},
+{level:"normal",q:"アンデス山脈がある大陸は？",c:["南アメリカ大陸","北アメリカ大陸","アフリカ大陸","ヨーロッパ大陸"],a:"南アメリカ大陸",e:"アンデス山脈は南アメリカ大陸にあります。"},
+{level:"normal",q:"ロッキー山脈がある大陸は？",c:["北アメリカ大陸","南アメリカ大陸","アジア大陸","アフリカ大陸"],a:"北アメリカ大陸",e:"ロッキー山脈は北アメリカにあります。"},
+
+{level:"normal",q:"地中海に面している国は？",c:["イタリア","モンゴル","ネパール","ラオス"],a:"イタリア",e:"イタリアは地中海に面しています。"},
+{level:"normal",q:"赤道が通る国は？",c:["エクアドル","カナダ","ロシア","ドイツ"],a:"エクアドル",e:"エクアドルは赤道が通る国です。"},
+{level:"normal",q:"ピラミッドで有名な国は？",c:["エジプト","ギリシャ","ペルー","インド"],a:"エジプト",e:"エジプトはピラミッドで有名です。"},
+{level:"normal",q:"マチュピチュがある国は？",c:["ペルー","ブラジル","チリ","メキシコ"],a:"ペルー",e:"マチュピチュはペルーにあります。"},
+{level:"normal",q:"グランドキャニオンがある国は？",c:["アメリカ","カナダ","メキシコ","オーストラリア"],a:"アメリカ",e:"グランドキャニオンはアメリカにあります。"},
+{level:"normal",q:"万里の長城がある国は？",c:["中国","韓国","日本","モンゴル"],a:"中国",e:"万里の長城は中国にあります。"},
+{level:"normal",q:"エアーズロックがある国は？",c:["オーストラリア","ニュージーランド","南アフリカ","インド"],a:"オーストラリア",e:"エアーズロックはオーストラリアにあります。"},
+{level:"normal",q:"カンガルーで有名な国は？",c:["オーストラリア","カナダ","ブラジル","フランス"],a:"オーストラリア",e:"カンガルーはオーストラリアの代表的な動物です。"},
+{level:"normal",q:"フィヨルドで有名な国は？",c:["ノルウェー","エジプト","タイ","メキシコ"],a:"ノルウェー",e:"ノルウェーはフィヨルド地形で有名です。"},
+{level:"normal",q:"アマゾン熱帯雨林が広がる国は？",c:["ブラジル","イギリス","韓国","エジプト"],a:"ブラジル",e:"アマゾン熱帯雨林の多くはブラジルに広がります。"},
+
+{level:"hard",q:"世界最大の島は？",c:["グリーンランド","ニューギニア島","ボルネオ島","マダガスカル島"],a:"グリーンランド",e:"世界最大の島はグリーンランドです。"},
+{level:"hard",q:"世界最大の湖は？",c:["カスピ海","ビクトリア湖","スペリオル湖","バイカル湖"],a:"カスピ海",e:"カスピ海は湖として扱われることがあります。"},
+{level:"hard",q:"世界で最も深い湖は？",c:["バイカル湖","琵琶湖","ビクトリア湖","カスピ海"],a:"バイカル湖",e:"バイカル湖は世界最深の湖です。"},
+{level:"hard",q:"世界最大級の砂漠は？",c:["サハラ砂漠","ゴビ砂漠","タクラマカン砂漠","ナミブ砂漠"],a:"サハラ砂漠",e:"サハラ砂漠は世界最大級の砂漠です。"},
+{level:"hard",q:"世界最長級の山脈は？",c:["アンデス山脈","アルプス山脈","ヒマラヤ山脈","ウラル山脈"],a:"アンデス山脈",e:"アンデス山脈は世界最長級の山脈です。"},
+{level:"hard",q:"スエズ運河がある国は？",c:["エジプト","パナマ","トルコ","ギリシャ"],a:"エジプト",e:"スエズ運河はエジプトにあります。"},
+{level:"hard",q:"パナマ運河がある国は？",c:["パナマ","コロンビア","メキシコ","ブラジル"],a:"パナマ",e:"パナマ運河はパナマにあります。"},
+{level:"hard",q:"ボスポラス海峡がある国は？",c:["トルコ","エジプト","イタリア","スペイン"],a:"トルコ",e:"ボスポラス海峡はトルコにあります。"},
+{level:"hard",q:"マラッカ海峡に近い国は？",c:["マレーシア","カナダ","チリ","ノルウェー"],a:"マレーシア",e:"マラッカ海峡は東南アジアの重要な海峡です。"},
+{level:"hard",q:"ジブラルタル海峡に近い国は？",c:["スペイン","日本","インド","オーストラリア"],a:"スペイン",e:"ジブラルタル海峡はスペイン南部付近にあります。"},
+
+{level:"hard",q:"首都がオタワの国は？",c:["カナダ","アメリカ","オーストラリア","ニュージーランド"],a:"カナダ",e:"カナダの首都はオタワです。"},
+{level:"hard",q:"首都がウェリントンの国は？",c:["ニュージーランド","オーストラリア","南アフリカ","イギリス"],a:"ニュージーランド",e:"ニュージーランドの首都はウェリントンです。"},
+{level:"hard",q:"首都がアンカラの国は？",c:["トルコ","ギリシャ","イラン","エジプト"],a:"トルコ",e:"トルコの首都はアンカラです。"},
+{level:"hard",q:"首都がカイロの国は？",c:["エジプト","モロッコ","南アフリカ","ケニア"],a:"エジプト",e:"エジプトの首都はカイロです。"},
+{level:"hard",q:"首都がナイロビの国は？",c:["ケニア","エジプト","ナイジェリア","ガーナ"],a:"ケニア",e:"ケニアの首都はナイロビです。"},
+{level:"hard",q:"首都がブエノスアイレスの国は？",c:["アルゼンチン","ブラジル","チリ","ペルー"],a:"アルゼンチン",e:"アルゼンチンの首都はブエノスアイレスです。"},
+{level:"hard",q:"首都がサンティアゴの国は？",c:["チリ","ペルー","ボリビア","コロンビア"],a:"チリ",e:"チリの首都はサンティアゴです。"},
+{level:"hard",q:"首都がリマの国は？",c:["ペルー","チリ","ブラジル","アルゼンチン"],a:"ペルー",e:"ペルーの首都はリマです。"},
+{level:"hard",q:"首都がメキシコシティの国は？",c:["メキシコ","スペイン","アルゼンチン","コロンビア"],a:"メキシコ",e:"メキシコの首都はメキシコシティです。"},
+{level:"hard",q:"首都がバンコクの国は？",c:["タイ","ベトナム","マレーシア","インドネシア"],a:"タイ",e:"タイの首都はバンコクです。"},
+
+{level:"hard",q:"首都がハノイの国は？",c:["ベトナム","タイ","ラオス","カンボジア"],a:"ベトナム",e:"ベトナムの首都はハノイです。"},
+{level:"hard",q:"首都がジャカルタの国は？",c:["インドネシア","マレーシア","フィリピン","シンガポール"],a:"インドネシア",e:"インドネシアの首都はジャカルタです。"},
+{level:"hard",q:"首都がマニラの国は？",c:["フィリピン","インドネシア","ベトナム","タイ"],a:"フィリピン",e:"フィリピンの首都はマニラです。"},
+{level:"hard",q:"首都がクアラルンプールの国は？",c:["マレーシア","シンガポール","タイ","インド"],a:"マレーシア",e:"マレーシアの首都はクアラルンプールです。"},
+{level:"hard",q:"首都がヘルシンキの国は？",c:["フィンランド","スウェーデン","ノルウェー","デンマーク"],a:"フィンランド",e:"フィンランドの首都はヘルシンキです。"},
+{level:"hard",q:"首都がストックホルムの国は？",c:["スウェーデン","ノルウェー","フィンランド","アイスランド"],a:"スウェーデン",e:"スウェーデンの首都はストックホルムです。"},
+{level:"hard",q:"首都がオスロの国は？",c:["ノルウェー","スウェーデン","デンマーク","ドイツ"],a:"ノルウェー",e:"ノルウェーの首都はオスロです。"},
+{level:"hard",q:"首都がコペンハーゲンの国は？",c:["デンマーク","ノルウェー","オランダ","ベルギー"],a:"デンマーク",e:"デンマークの首都はコペンハーゲンです。"},
+{level:"hard",q:"首都がアムステルダムの国は？",c:["オランダ","ベルギー","ドイツ","スイス"],a:"オランダ",e:"オランダの首都はアムステルダムです。"},
+{level:"hard",q:"首都がブリュッセルの国は？",c:["ベルギー","オランダ","フランス","ルクセンブルク"],a:"ベルギー",e:"ベルギーの首都はブリュッセルです。"}
+];
+
+let currentQuiz=[];
+let current=0;
+let score=0;
+let answered=false;
+
+const menu=document.getElementById("menu");
+const quiz=document.getElementById("quiz");
+const questionEl=document.getElementById("question");
+const choicesEl=document.getElementById("choices");
+const resultEl=document.getElementById("result");
+const commentEl=document.getElementById("comment");
+const countEl=document.getElementById("count");
+const totalEl=document.getElementById("total");
+const scoreEl=document.getElementById("score");
+const nextBtn=document.getElementById("nextBtn");
+const restartBtn=document.getElementById("restartBtn");
+const levelNameEl=document.getElementById("levelName");
+
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+function startGame(level){
+  if(level==="easy"){
+    currentQuiz=shuffle(quizData.filter(x=>x.level==="easy"));
+    levelNameEl.textContent="初級";
+  }else if(level==="normal"){
+    currentQuiz=shuffle(quizData.filter(x=>x.level==="normal"));
+    levelNameEl.textContent="中級";
+  }else if(level==="hard"){
+    currentQuiz=shuffle(quizData.filter(x=>x.level==="hard"));
+    levelNameEl.textContent="上級";
+  }else{
+    currentQuiz=shuffle([...quizData]);
+    levelNameEl.textContent="全100問";
+  }
+
+  current=0;
+  score=0;
+  scoreEl.textContent=score;
+  totalEl.textContent=currentQuiz.length;
+
+  menu.classList.add("hidden");
+  quiz.classList.remove("hidden");
+  restartBtn.style.display="none";
+
+  loadQuestion();
+}
+
+function loadQuestion(){
+  answered=false;
+  resultEl.textContent="";
+  commentEl.textContent="";
+  nextBtn.style.display="none";
+  choicesEl.innerHTML="";
+
+  const q=currentQuiz[current];
+  countEl.textContent=current+1;
+  questionEl.textContent=q.q;
+
+  shuffle([...q.c]).forEach(choice=>{
+    const btn=document.createElement("button");
+    btn.textContent=choice;
+    btn.onclick=()=>checkAnswer(btn,choice);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function checkAnswer(button,selected){
+  if(answered)return;
+  answered=true;
+
+  const q=currentQuiz[current];
+  const buttons=choicesEl.querySelectorAll("button");
+
+  buttons.forEach(btn=>{
+    btn.disabled=true;
+    if(btn.textContent===q.a) btn.classList.add("correct");
+  });
+
+  if(selected===q.a){
+    score+=10;
+    scoreEl.textContent=score;
+    resultEl.textContent="正解！";
+  }else{
+    button.classList.add("wrong");
+    resultEl.textContent="不正解…";
+  }
+
+  commentEl.textContent=q.e;
+
+  if(current<currentQuiz.length-1){
+    nextBtn.style.display="inline-block";
+  }else{
+    finishGame();
+  }
+}
+
+function nextQuestion(){
+  current++;
+  loadQuestion();
+}
+
+function finishGame(){
+  const max=currentQuiz.length*10;
+  const rate=Math.round(score/max*100);
+
+  questionEl.textContent="ゲーム終了！";
+  choicesEl.innerHTML="";
+  nextBtn.style.display="none";
+  restartBtn.style.display="inline-block";
+
+  commentEl.textContent=`あなたのスコアは ${score}/${max} 点、正答率 ${rate}% です。`;
+
+  if(rate===100){
+    resultEl.textContent="🏆 全問正解！地理博士です！";
+  }else if(rate>=80){
+    resultEl.textContent="🎉 かなり優秀です！";
+  }else if(rate>=50){
+    resultEl.textContent="👍 まずまずです！";
+  }else{
+    resultEl.textContent="📚 もう一度挑戦しよう！";
+  }
+}
+
+function restartGame(){
+  quiz.classList.add("hidden");
+  menu.classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
